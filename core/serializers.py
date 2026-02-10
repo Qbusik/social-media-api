@@ -3,10 +3,16 @@ from rest_framework import serializers
 from core.models import Profile, Post, Comment
 
 
-class ProfileSerializer(serializers.ModelSerializer):
+class ProfileListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ("first_name", "last_name", "city", "country", "bio", "picture")
+        fields = ("first_name", "last_name", "city", "country", "picture")
+
+
+class ProfileRetrieveSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ("first_name", "last_name", "city", "country", "bio", "picture", "followers")
 
 
 class PostSerializer(serializers.ModelSerializer):
@@ -19,3 +25,9 @@ class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
         fields = "__all__"
+
+
+class ToggleFollowSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Profile
+        fields = ("id", "followers")

@@ -1,12 +1,13 @@
 from django.db.models import Q
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
-from rest_framework import viewsets, generics, mixins
+from rest_framework import viewsets, generics, mixins, status
 from rest_framework.pagination import PageNumberPagination
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.response import Response
 
 from core.models import Profile, Post, Comment
-from core.serializers import ProfileSerializer, PostSerializer, CommentSerializer
+from core.serializers import PostSerializer, CommentSerializer, ToggleFollowSerializer, ProfileListSerializer, \
+    ProfileRetrieveSerializer
 
 
 class StandardPagination(PageNumberPagination):
@@ -15,8 +16,7 @@ class StandardPagination(PageNumberPagination):
 
 
 class MyProfileView(generics.RetrieveUpdateAPIView):
-    serializer_class = ProfileSerializer
-    permission_classes = [IsAuthenticated]
+    serializer_class = ProfileRetrieveSerializer
 
     def get_object(self):
         profile, _ = Profile.objects.get_or_create(user=self.request.user)
@@ -29,8 +29,13 @@ class ProfileViewSet(
     viewsets.GenericViewSet
 ):
     queryset = Profile.objects.all()
-    serializer_class = ProfileSerializer
+    serializer_class = ProfileListSerializer
     pagination_class = StandardPagination
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return ProfileRetrieveSerializer
+        return ProfileListSerializer
 
     def get_queryset(self):
         name = self.request.query_params.get("name")
@@ -64,6 +69,33 @@ class ProfileViewSet(
     )
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
+
+
+class ToggleFollowView(generics.GenericAPIView):
+    serializer_class = ToggleFollowSerializer
+
+    def post(self, request, pk):
+        try:
+            profile_to_follow = Profile.objects.get(pk=pk)
+        except Profile.DoesNotExist:
+            return Response({"detail": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+
+        user = request.user
+
+        if user in profile_to_follow.followers.all():
+            profile_to_follow.followers.remove(user)
+            followed = False
+        else:
+            profile_to_follow.followers.add(user)
+            followed = True
+
+        profile_to_follow.save()
+        serializer = self.get_serializer(profile_to_follow)
+
+        return Response({
+            "followed": followed,
+            "profile": serializer.data
+        }, status=status.HTTP_200_OK)
 
 
 class PostViewSet(viewsets.ModelViewSet):
