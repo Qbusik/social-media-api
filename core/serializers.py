@@ -6,7 +6,7 @@ from core.models import Profile, Post, Comment
 class ProfileSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = "__all__"
+        fields = ("first_name", "last_name", "city", "country", "bio", "picture")
 
 
 class PostSerializer(serializers.ModelSerializer):
