@@ -23,3 +23,10 @@ urlpatterns = [
         "api/doc/redoc/", SpectacularRedocView.as_view(url_name="schema"), name="redoc"
     ),
 ]
+
+if settings.DEBUG:
+    import debug_toolbar
+
+    urlpatterns += [
+        path("__debug__/", include(debug_toolbar.urls)),
+    ]
