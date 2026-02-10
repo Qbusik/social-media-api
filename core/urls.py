@@ -28,12 +28,12 @@ urlpatterns = [
     ),
     path(
         "profiles/followers/",
-        FollowersListViewSet.as_view({"get": "list"}),
+        FollowersListViewSet.as_view(),
         name="followers",
     ),
     path(
         "profiles/followed/",
-        FollowedListViewSet.as_view({"get": "list"}),
+        FollowedListViewSet.as_view(),
         name="followed",
     ),
     path("", include(router.urls)),

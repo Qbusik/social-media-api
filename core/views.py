@@ -2,6 +2,7 @@ from django.db.models import Q
 from drf_spectacular.types import OpenApiTypes
 from drf_spectacular.utils import extend_schema, OpenApiParameter
 from rest_framework import viewsets, generics, mixins, status
+from rest_framework.generics import ListAPIView
 from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
@@ -74,7 +75,7 @@ class ProfileViewSet(
         return super().list(request, *args, **kwargs)
 
 
-class FollowersListViewSet(viewsets.ReadOnlyModelViewSet):
+class FollowersListViewSet(ListAPIView):
     serializer_class = ProfileListSerializer
 
     def get_queryset(self):
@@ -82,7 +83,7 @@ class FollowersListViewSet(viewsets.ReadOnlyModelViewSet):
         return Profile.objects.filter(user__in=profile.followers.all())
 
 
-class FollowedListViewSet(viewsets.ReadOnlyModelViewSet):
+class FollowedListViewSet(ListAPIView):
     serializer_class = ProfileListSerializer
 
     def get_queryset(self):
