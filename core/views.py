@@ -6,8 +6,13 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from core.models import Profile, Post, Comment
-from core.serializers import PostSerializer, CommentSerializer, ToggleFollowSerializer, ProfileListSerializer, \
-    ProfileRetrieveSerializer
+from core.serializers import (
+    PostSerializer,
+    CommentSerializer,
+    ToggleFollowSerializer,
+    ProfileListSerializer,
+    ProfileRetrieveSerializer,
+)
 
 
 class StandardPagination(PageNumberPagination):
@@ -24,9 +29,7 @@ class MyProfileView(generics.RetrieveUpdateAPIView):
 
 
 class ProfileViewSet(
-    mixins.ListModelMixin,
-    mixins.RetrieveModelMixin,
-    viewsets.GenericViewSet
+    mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
     queryset = Profile.objects.all()
     serializer_class = ProfileListSerializer
@@ -71,6 +74,22 @@ class ProfileViewSet(
         return super().list(request, *args, **kwargs)
 
 
+class FollowersListViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ProfileListSerializer
+
+    def get_queryset(self):
+        profile = self.request.user.profile
+        return Profile.objects.filter(user__in=profile.followers.all())
+
+
+class FollowedListViewSet(viewsets.ReadOnlyModelViewSet):
+    serializer_class = ProfileListSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Profile.objects.filter(followers=user)
+
+
 class ToggleFollowView(generics.GenericAPIView):
     serializer_class = ToggleFollowSerializer
 
@@ -78,7 +97,9 @@ class ToggleFollowView(generics.GenericAPIView):
         try:
             profile_to_follow = Profile.objects.get(pk=pk)
         except Profile.DoesNotExist:
-            return Response({"detail": "Profile not found"}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Profile not found"}, status=status.HTTP_404_NOT_FOUND
+            )
 
         user = request.user
 
@@ -92,10 +113,10 @@ class ToggleFollowView(generics.GenericAPIView):
         profile_to_follow.save()
         serializer = self.get_serializer(profile_to_follow)
 
-        return Response({
-            "followed": followed,
-            "profile": serializer.data
-        }, status=status.HTTP_200_OK)
+        return Response(
+            {"followed": followed, "profile": serializer.data},
+            status=status.HTTP_200_OK,
+        )
 
 
 class PostViewSet(viewsets.ModelViewSet):

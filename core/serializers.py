@@ -12,7 +12,15 @@ class ProfileListSerializer(serializers.ModelSerializer):
 class ProfileRetrieveSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ("first_name", "last_name", "city", "country", "bio", "picture", "followers")
+        fields = (
+            "first_name",
+            "last_name",
+            "city",
+            "country",
+            "bio",
+            "picture",
+            "followers",
+        )
 
 
 class PostSerializer(serializers.ModelSerializer):
