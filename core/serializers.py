@@ -27,7 +27,7 @@ class ProfileRetrieveSerializer(serializers.ModelSerializer):
 class CommentSerializer(serializers.ModelSerializer):
     class Meta:
         model = Comment
-        fields = ("user", "content", "created_at")
+        fields = ("id", "user", "content", "created_at")
 
 
 class CommentCreateSerializer(serializers.ModelSerializer):

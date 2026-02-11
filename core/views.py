@@ -7,6 +7,7 @@ from rest_framework.pagination import PageNumberPagination
 from rest_framework.response import Response
 
 from core.models import Profile, Post, Comment
+from core.permissions import IsOwner
 from core.serializers import (
     CommentSerializer,
     ToggleFollowSerializer,
@@ -27,6 +28,9 @@ class StandardPagination(PageNumberPagination):
 
 class MyProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileRetrieveSerializer
+    fields = "__all__"
+
+    read_only_fields = ("id", "followers", "following")
 
     def get_object(self):
         profile, _ = Profile.objects.get_or_create(user=self.request.user)
@@ -39,6 +43,11 @@ class ProfileViewSet(
     queryset = Profile.objects.all()
     serializer_class = ProfileListSerializer
     pagination_class = StandardPagination
+
+    def get_permissions(self):
+        if self.action in ["destroy", "update", "partial_update"]:
+            return [IsOwner()]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.action == "retrieve":
@@ -129,6 +138,11 @@ class PostViewSet(viewsets.ModelViewSet):
     serializer_class = PostListSerializer
     pagination_class = StandardPagination
 
+    def get_permissions(self):
+        if self.action in ["destroy", "update", "partial_update"]:
+            return [IsOwner()]
+        return super().get_permissions()
+
     def get_serializer_class(self):
         if self.action == "retrieve":
             return PostRetrieveSerializer
@@ -213,6 +227,11 @@ class CommentViewSet(
 ):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
+
+    def get_permissions(self):
+        if self.action in ["destroy", "update", "partial_update"]:
+            return [IsOwner()]
+        return super().get_permissions()
 
     def get_serializer_class(self):
         if self.action == "create":

@@ -29,7 +29,7 @@ urlpatterns = [
         name="toggle-follow",
     ),
     path(
-        "profiles/toggle-like/<int:pk>/",
+        "posts/toggle-like/<int:pk>/",
         ToggleLikeView.as_view(),
         name="toggle-like",
     ),
