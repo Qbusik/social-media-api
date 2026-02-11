@@ -7,8 +7,8 @@ from core.views import (
     ProfileViewSet,
     MyProfileView,
     ToggleFollowView,
-    FollowersListViewSet,
-    FollowedListViewSet,
+    FollowersListView,
+    FollowedListView,
 )
 
 app_name = "core"
@@ -28,12 +28,12 @@ urlpatterns = [
     ),
     path(
         "profiles/followers/",
-        FollowersListViewSet.as_view(),
+        FollowersListView.as_view(),
         name="followers",
     ),
     path(
         "profiles/followed/",
-        FollowedListViewSet.as_view(),
+        FollowedListView.as_view(),
         name="followed",
     ),
     path("", include(router.urls)),

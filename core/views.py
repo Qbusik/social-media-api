@@ -75,7 +75,7 @@ class ProfileViewSet(
         return super().list(request, *args, **kwargs)
 
 
-class FollowersListViewSet(ListAPIView):
+class FollowersListView(ListAPIView):
     serializer_class = ProfileListSerializer
 
     def get_queryset(self):
@@ -83,7 +83,7 @@ class FollowersListViewSet(ListAPIView):
         return Profile.objects.filter(user__in=profile.followers.all())
 
 
-class FollowedListViewSet(ListAPIView):
+class FollowedListView(ListAPIView):
     serializer_class = ProfileListSerializer
 
     def get_queryset(self):
