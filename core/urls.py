@@ -8,7 +8,9 @@ from core.views import (
     MyProfileView,
     ToggleFollowView,
     FollowersListView,
-    FollowedListView, ToggleLikeView, LikedPostsView,
+    FollowedListView,
+    ToggleLikeView,
+    LikedPostsView,
 )
 
 app_name = "core"

@@ -11,7 +11,11 @@ from core.serializers import (
     CommentSerializer,
     ToggleFollowSerializer,
     ProfileListSerializer,
-    ProfileRetrieveSerializer, PostListSerializer, PostRetrieveSerializer, PostCreateSerializer, ToggleLikeSerializer,
+    ProfileRetrieveSerializer,
+    PostListSerializer,
+    PostRetrieveSerializer,
+    PostCreateSerializer,
+    ToggleLikeSerializer,
     CommentCreateSerializer,
 )
 
@@ -143,23 +147,20 @@ class PostViewSet(viewsets.ModelViewSet):
         post = serializer.save(user=request.user)
 
         return Response(
-            PostRetrieveSerializer(post).data,
-            status=status.HTTP_201_CREATED
+            PostRetrieveSerializer(post).data, status=status.HTTP_201_CREATED
         )
 
     def get_queryset(self):
         user = self.request.user
         followed_ids = user.following.values_list("user_id", flat=True)
 
-        queryset = Post.objects.filter(
-            Q(user=user) | Q(user__id__in=followed_ids)
-        )
+        queryset = Post.objects.filter(Q(user=user) | Q(user__id__in=followed_ids))
 
         search = self.request.query_params.get("search")
         if search:
             queryset = queryset.filter(
-                Q(user__profile__first_name__icontains=search) |
-                Q(user__profile__last_name__icontains=search)
+                Q(user__profile__first_name__icontains=search)
+                | Q(user__profile__last_name__icontains=search)
             )
 
         return queryset
@@ -215,7 +216,10 @@ class LikedPostsView(ListAPIView):
 
 
 class CommentViewSet(
-    mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet,
+    mixins.CreateModelMixin,
+    mixins.UpdateModelMixin,
+    mixins.DestroyModelMixin,
+    viewsets.GenericViewSet,
 ):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
@@ -228,16 +232,19 @@ class CommentViewSet(
     def create(self, request, *args, **kwargs):
         post_id = request.data.get("post")
         if not post_id:
-            return Response({"detail": "Post ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+            return Response(
+                {"detail": "Post ID is required."}, status=status.HTTP_400_BAD_REQUEST
+            )
 
         try:
             post = Post.objects.get(pk=post_id)
         except Post.DoesNotExist:
-            return Response({"detail": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+            return Response(
+                {"detail": "Post not found."}, status=status.HTTP_404_NOT_FOUND
+            )
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         serializer.save(user=request.user, post=post)
 
         return Response(serializer.data, status=status.HTTP_201_CREATED)
-
