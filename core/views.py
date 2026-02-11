@@ -8,11 +8,10 @@ from rest_framework.response import Response
 
 from core.models import Profile, Post, Comment
 from core.serializers import (
-    PostSerializer,
     CommentSerializer,
     ToggleFollowSerializer,
     ProfileListSerializer,
-    ProfileRetrieveSerializer,
+    ProfileRetrieveSerializer, PostListSerializer, PostRetrieveSerializer, PostCreateSerializer, ToggleLikeSerializer,
 )
 
 
@@ -122,8 +121,96 @@ class ToggleFollowView(generics.GenericAPIView):
 
 class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
-    serializer_class = PostSerializer
+    serializer_class = PostListSerializer
     pagination_class = StandardPagination
+    search_fields = [
+        "user__profile__first_name",
+        "user__profile__last_name",
+    ]
+
+    def get_serializer_class(self):
+        if self.action == "retrieve":
+            return PostRetrieveSerializer
+        if self.action == "create":
+            return PostCreateSerializer
+        return PostListSerializer
+
+    def create(self, request, *args, **kwargs):
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+
+        post = serializer.save(user=request.user)
+
+        return Response(
+            PostRetrieveSerializer(post).data,
+            status=status.HTTP_201_CREATED
+        )
+
+    def get_queryset(self):
+        user = self.request.user
+        followed_ids = user.following.values_list("user_id", flat=True)
+
+        queryset = Post.objects.filter(
+            Q(user=user) | Q(user__id__in=followed_ids)
+        )
+
+        search = self.request.query_params.get("search")
+        if search:
+            queryset = queryset.filter(
+                Q(user__profile__first_name__icontains=search) |
+                Q(user__profile__last_name__icontains=search)
+            )
+
+        return queryset
+
+    @extend_schema(
+        parameters=[
+            OpenApiParameter(
+                "search",
+                type=OpenApiTypes.STR,
+                description="Filter profiles by first or last name contains (ex. ?name=Jacob)",
+            ),
+        ]
+    )
+    def list(self, request, *args, **kwargs):
+        return super().list(request, *args, **kwargs)
+
+
+class ToggleLikeView(generics.GenericAPIView):
+    serializer_class = ToggleLikeSerializer
+
+    def post(self, request, pk):
+        try:
+            post_to_like = Post.objects.get(pk=pk)
+        except Post.DoesNotExist:
+            return Response(
+                {"detail": "Post not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        user = request.user
+
+        if user in post_to_like.likes.all():
+            post_to_like.likes.remove(user)
+            like = False
+        else:
+            post_to_like.likes.add(user)
+            like = True
+
+        post_to_like.save()
+        serializer = self.get_serializer(post_to_like)
+
+        return Response(
+            {"liked": like, "profile": serializer.data},
+            status=status.HTTP_200_OK,
+        )
+
+
+class LikedPostsView(ListAPIView):
+    serializer_class = PostListSerializer
+
+    def get_queryset(self):
+        user = self.request.user
+        return Post.objects.filter(likes=user)
 
 
 class CommentViewSet(viewsets.ModelViewSet):

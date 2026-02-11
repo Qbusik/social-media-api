@@ -8,7 +8,7 @@ from core.views import (
     MyProfileView,
     ToggleFollowView,
     FollowersListView,
-    FollowedListView,
+    FollowedListView, ToggleLikeView, LikedPostsView,
 )
 
 app_name = "core"
@@ -27,6 +27,11 @@ urlpatterns = [
         name="toggle-follow",
     ),
     path(
+        "profiles/toggle-like/<int:pk>/",
+        ToggleLikeView.as_view(),
+        name="toggle-like",
+    ),
+    path(
         "profiles/followers/",
         FollowersListView.as_view(),
         name="followers",
@@ -35,6 +40,11 @@ urlpatterns = [
         "profiles/followed/",
         FollowedListView.as_view(),
         name="followed",
+    ),
+    path(
+        "posts/liked/",
+        LikedPostsView.as_view(),
+        name="liked",
     ),
     path("", include(router.urls)),
 ]
