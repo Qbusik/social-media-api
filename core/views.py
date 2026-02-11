@@ -18,6 +18,7 @@ from core.serializers import (
     PostCreateSerializer,
     ToggleLikeSerializer,
     CommentCreateSerializer,
+    CommentUpdateSerializer,
 )
 
 
@@ -28,9 +29,6 @@ class StandardPagination(PageNumberPagination):
 
 class MyProfileView(generics.RetrieveUpdateAPIView):
     serializer_class = ProfileRetrieveSerializer
-    fields = "__all__"
-
-    read_only_fields = ("id", "followers", "following")
 
     def get_object(self):
         profile, _ = Profile.objects.get_or_create(user=self.request.user)
@@ -150,14 +148,12 @@ class PostViewSet(viewsets.ModelViewSet):
             return PostCreateSerializer
         return PostListSerializer
 
-
     def get_queryset(self):
         user = self.request.user
         followed_ids = user.following.values_list("user_id", flat=True)
 
         queryset = Post.objects.filter(
-            Q(user=user) | Q(user__id__in=followed_ids),
-            is_published=True
+            Q(user=user) | Q(user__id__in=followed_ids), is_published=True
         )
 
         search = self.request.query_params.get("search")
@@ -234,6 +230,8 @@ class CommentViewSet(
         return super().get_permissions()
 
     def get_serializer_class(self):
+        if self.action in ("update", "partial_update"):
+            return CommentUpdateSerializer
         if self.action == "create":
             return CommentCreateSerializer
         return CommentSerializer
