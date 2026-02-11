@@ -23,6 +23,18 @@ class ProfileRetrieveSerializer(serializers.ModelSerializer):
         )
 
 
+class CommentSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ("user", "content", "created_at")
+
+
+class CommentCreateSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Comment
+        fields = ("post", "content")
+
+
 class PostCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
@@ -36,15 +48,11 @@ class PostListSerializer(serializers.ModelSerializer):
 
 
 class PostRetrieveSerializer(serializers.ModelSerializer):
+    comments = CommentSerializer(many=True, read_only=True)
+
     class Meta:
         model = Post
-        fields = ("id", "user", "content", "picture")
-
-
-class CommentSerializer(serializers.ModelSerializer):
-    class Meta:
-        model = Comment
-        fields = "__all__"
+        fields = ("id", "user", "content", "picture", "comments")
 
 
 class ToggleFollowSerializer(serializers.ModelSerializer):

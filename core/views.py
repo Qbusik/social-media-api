@@ -12,6 +12,7 @@ from core.serializers import (
     ToggleFollowSerializer,
     ProfileListSerializer,
     ProfileRetrieveSerializer, PostListSerializer, PostRetrieveSerializer, PostCreateSerializer, ToggleLikeSerializer,
+    CommentCreateSerializer,
 )
 
 
@@ -213,7 +214,30 @@ class LikedPostsView(ListAPIView):
         return Post.objects.filter(likes=user)
 
 
-class CommentViewSet(viewsets.ModelViewSet):
+class CommentViewSet(
+    mixins.CreateModelMixin, mixins.UpdateModelMixin, mixins.DestroyModelMixin, viewsets.GenericViewSet,
+):
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
-    pagination_class = StandardPagination
+
+    def get_serializer_class(self):
+        if self.action == "create":
+            return CommentCreateSerializer
+        return CommentSerializer
+
+    def create(self, request, *args, **kwargs):
+        post_id = request.data.get("post")
+        if not post_id:
+            return Response({"detail": "Post ID is required."}, status=status.HTTP_400_BAD_REQUEST)
+
+        try:
+            post = Post.objects.get(pk=post_id)
+        except Post.DoesNotExist:
+            return Response({"detail": "Post not found."}, status=status.HTTP_404_NOT_FOUND)
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user, post=post)
+
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
+
