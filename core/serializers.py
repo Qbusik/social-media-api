@@ -1,3 +1,4 @@
+from django.utils import timezone
 from rest_framework import serializers
 
 from core.models import Profile, Post, Comment
@@ -38,7 +39,25 @@ class CommentCreateSerializer(serializers.ModelSerializer):
 class PostCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ("id", "content", "picture")
+        fields = ("content", "picture", "scheduled_time")
+
+    def create(self, validated_data):
+        user = self.context["request"].user
+        scheduled_time = validated_data.get("scheduled_time")
+
+        post = Post.objects.create(
+            user=user,
+            content=validated_data.get("content"),
+            picture=validated_data.get("picture"),
+            scheduled_time=scheduled_time,
+            is_published=(scheduled_time is None or scheduled_time <= timezone.now()),
+        )
+
+        if scheduled_time and scheduled_time > timezone.now():
+            from core.tasks import publish_post
+            publish_post.apply_async(args=[post.id], eta=scheduled_time)
+
+        return post
 
 
 class PostListSerializer(serializers.ModelSerializer):

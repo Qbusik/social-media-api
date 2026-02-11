@@ -128,10 +128,6 @@ class PostViewSet(viewsets.ModelViewSet):
     queryset = Post.objects.all()
     serializer_class = PostListSerializer
     pagination_class = StandardPagination
-    search_fields = [
-        "user__profile__first_name",
-        "user__profile__last_name",
-    ]
 
     def get_serializer_class(self):
         if self.action == "retrieve":
@@ -140,21 +136,15 @@ class PostViewSet(viewsets.ModelViewSet):
             return PostCreateSerializer
         return PostListSerializer
 
-    def create(self, request, *args, **kwargs):
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
-
-        post = serializer.save(user=request.user)
-
-        return Response(
-            PostRetrieveSerializer(post).data, status=status.HTTP_201_CREATED
-        )
 
     def get_queryset(self):
         user = self.request.user
         followed_ids = user.following.values_list("user_id", flat=True)
 
-        queryset = Post.objects.filter(Q(user=user) | Q(user__id__in=followed_ids))
+        queryset = Post.objects.filter(
+            Q(user=user) | Q(user__id__in=followed_ids),
+            is_published=True
+        )
 
         search = self.request.query_params.get("search")
         if search:

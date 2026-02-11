@@ -56,9 +56,11 @@ class Post(models.Model):
     likes = models.ManyToManyField(
         get_user_model(), related_name="liked_posts", blank=True
     )
-
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
+
+    scheduled_time = models.DateTimeField(blank=True, null=True)
+    is_published = models.BooleanField(default=True)
 
     def __str__(self):
         return f"Post by: {self.user.email}"
