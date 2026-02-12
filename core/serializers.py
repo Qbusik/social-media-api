@@ -7,7 +7,7 @@ from core.models import Profile, Post, Comment
 class ProfileListSerializer(serializers.ModelSerializer):
     class Meta:
         model = Profile
-        fields = ("first_name", "last_name", "city", "country", "picture")
+        fields = ("first_name", "last_name", "picture")
 
 
 class ProfileRetrieveSerializer(serializers.ModelSerializer):
@@ -28,9 +28,11 @@ class ProfileRetrieveSerializer(serializers.ModelSerializer):
 
 
 class CommentSerializer(serializers.ModelSerializer):
+    profile_id = ProfileListSerializer(source="user.profile", read_only=True)
+
     class Meta:
         model = Comment
-        fields = ("id", "user", "content", "created_at")
+        fields = ("id", "profile_id", "content", "created_at")
 
 
 class CommentCreateSerializer(serializers.ModelSerializer):
@@ -72,17 +74,22 @@ class PostCreateSerializer(serializers.ModelSerializer):
 
 
 class PostListSerializer(serializers.ModelSerializer):
+    profile = ProfileListSerializer(source="user.profile", read_only=True)
+
     class Meta:
         model = Post
-        fields = ("id", "user", "content")
+        fields = ("id", "profile", "content")
+
+    read_only_fields = ("id", "profile")
 
 
 class PostRetrieveSerializer(serializers.ModelSerializer):
     comments = CommentSerializer(many=True, read_only=True)
+    profile = ProfileListSerializer(source="user.profile", read_only=True)
 
     class Meta:
         model = Post
-        fields = ("id", "user", "content", "picture", "comments")
+        fields = ("id", "profile", "content", "picture", "comments")
 
 
 class ToggleFollowSerializer(serializers.ModelSerializer):

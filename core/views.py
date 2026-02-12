@@ -48,7 +48,7 @@ class ProfileViewSet(
         return super().get_permissions()
 
     def get_serializer_class(self):
-        if self.action == "retrieve":
+        if self.action in ("retrieve", "list"):
             return ProfileRetrieveSerializer
         return ProfileListSerializer
 
