@@ -28,6 +28,10 @@ class StandardPagination(PageNumberPagination):
 
 
 class MyProfileView(generics.RetrieveUpdateAPIView):
+    """
+    Retrieve and update user's profile.
+    """
+
     serializer_class = ProfileRetrieveSerializer
 
     def get_object(self):
@@ -38,6 +42,10 @@ class MyProfileView(generics.RetrieveUpdateAPIView):
 class ProfileViewSet(
     mixins.ListModelMixin, mixins.RetrieveModelMixin, viewsets.GenericViewSet
 ):
+    """
+    List and retrieve user profiles with optional filtering by name and city.
+    """
+
     queryset = Profile.objects.all()
     serializer_class = ProfileListSerializer
     pagination_class = StandardPagination
@@ -87,6 +95,10 @@ class ProfileViewSet(
 
 
 class FollowersListView(ListAPIView):
+    """
+    List profiles of users who follow the user.
+    """
+
     serializer_class = ProfileListSerializer
 
     def get_queryset(self):
@@ -95,6 +107,10 @@ class FollowersListView(ListAPIView):
 
 
 class FollowedListView(ListAPIView):
+    """
+    List profiles of users who are followed by the user.
+    """
+
     serializer_class = ProfileListSerializer
 
     def get_queryset(self):
@@ -103,6 +119,10 @@ class FollowedListView(ListAPIView):
 
 
 class ToggleFollowView(generics.GenericAPIView):
+    """
+    Toggle follow or unfollow for a given user profile.
+    """
+
     serializer_class = ToggleFollowSerializer
 
     def post(self, request, pk):
@@ -132,6 +152,10 @@ class ToggleFollowView(generics.GenericAPIView):
 
 
 class PostViewSet(viewsets.ModelViewSet):
+    """
+    Manage own posts and list posts from user and followed users.
+    """
+
     queryset = Post.objects.all()
     serializer_class = PostListSerializer
     pagination_class = StandardPagination
@@ -179,6 +203,10 @@ class PostViewSet(viewsets.ModelViewSet):
 
 
 class ToggleLikeView(generics.GenericAPIView):
+    """
+    Toggle like or unlike for a given post.
+    """
+
     serializer_class = ToggleLikeSerializer
 
     def post(self, request, pk):
@@ -208,6 +236,10 @@ class ToggleLikeView(generics.GenericAPIView):
 
 
 class LikedPostsView(ListAPIView):
+    """
+    List posts liked by the user.
+    """
+
     serializer_class = PostListSerializer
 
     def get_queryset(self):
@@ -221,6 +253,10 @@ class CommentViewSet(
     mixins.DestroyModelMixin,
     viewsets.GenericViewSet,
 ):
+    """
+    Create, update, and delete own comments on posts.
+    """
+
     queryset = Comment.objects.all()
     serializer_class = CommentSerializer
 
