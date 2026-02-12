@@ -64,7 +64,7 @@ class ProfileViewSet(
         name = self.request.query_params.get("name")
         city = self.request.query_params.get("city")
 
-        queryset = self.queryset
+        queryset = self.queryset.select_related("user").prefetch_related("followers")
 
         if name:
             queryset = queryset.filter(
@@ -103,7 +103,9 @@ class FollowersListView(ListAPIView):
 
     def get_queryset(self):
         profile = self.request.user.profile
-        return Profile.objects.filter(user__in=profile.followers.all())
+        return Profile.objects.filter(user__in=profile.followers.all()).select_related(
+            "user", "user__profile"
+        )
 
 
 class FollowedListView(ListAPIView):
@@ -115,7 +117,9 @@ class FollowedListView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Profile.objects.filter(followers=user)
+        return Profile.objects.filter(followers=user).select_related(
+            "user", "user__profile"
+        )
 
 
 class ToggleFollowView(generics.GenericAPIView):
@@ -135,7 +139,7 @@ class ToggleFollowView(generics.GenericAPIView):
 
         user = request.user
 
-        if user in profile_to_follow.followers.all():
+        if profile_to_follow.followers.filter(id=user.id).exists():
             profile_to_follow.followers.remove(user)
             followed = False
         else:
@@ -174,11 +178,11 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        followed_ids = user.following.values_list("user_id", flat=True)
+        followed_ids = user.following.values_list("id", flat=True)
 
         queryset = Post.objects.filter(
             Q(user=user) | Q(user__id__in=followed_ids), is_published=True
-        )
+        ).select_related("user", "user__profile")
 
         search = self.request.query_params.get("search")
         if search:
@@ -219,7 +223,7 @@ class ToggleLikeView(generics.GenericAPIView):
 
         user = request.user
 
-        if user in post_to_like.likes.all():
+        if post_to_like.likes.filter(id=user.id).exists():
             post_to_like.likes.remove(user)
             like = False
         else:
@@ -244,7 +248,7 @@ class LikedPostsView(ListAPIView):
 
     def get_queryset(self):
         user = self.request.user
-        return Post.objects.filter(likes=user)
+        return Post.objects.filter(likes=user).select_related("user", "user__profile")
 
 
 class CommentViewSet(
@@ -257,7 +261,7 @@ class CommentViewSet(
     Create, update, and delete own comments on posts.
     """
 
-    queryset = Comment.objects.all()
+    queryset = Comment.objects.select_related("user", "user__profile", "post")
     serializer_class = CommentSerializer
 
     def get_permissions(self):

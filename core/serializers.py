@@ -1,5 +1,6 @@
 from django.utils import timezone
 from rest_framework import serializers
+from core.tasks import publish_post
 
 from core.models import Profile, Post, Comment
 
@@ -66,8 +67,6 @@ class PostCreateSerializer(serializers.ModelSerializer):
         )
 
         if scheduled_time and scheduled_time > timezone.now():
-            from core.tasks import publish_post
-
             publish_post.apply_async(args=[post.id], eta=scheduled_time)
 
         return post
