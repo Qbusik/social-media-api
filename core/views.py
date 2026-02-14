@@ -178,10 +178,10 @@ class PostViewSet(viewsets.ModelViewSet):
 
     def get_queryset(self):
         user = self.request.user
-        followed_ids = user.following.values_list("id", flat=True)
+        followed_user_ids = user.following.values_list("user_id", flat=True)
 
         queryset = Post.objects.filter(
-            Q(user=user) | Q(user__id__in=followed_ids), is_published=True
+            Q(user=user) | Q(user__id__in=followed_user_ids), is_published=True
         ).select_related("user", "user__profile")
 
         search = self.request.query_params.get("search")

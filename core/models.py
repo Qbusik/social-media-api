@@ -36,6 +36,9 @@ class Profile(models.Model):
     def __str__(self):
         return self.user.email
 
+    class Meta:
+        ordering = ["-created_at"]
+
 
 class Post(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -59,6 +62,9 @@ class Post(models.Model):
     def __str__(self):
         return f"Post by: {self.user.email}"
 
+    class Meta:
+        ordering = ["-created_at"]
+
 
 class Comment(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
@@ -70,3 +76,6 @@ class Comment(models.Model):
 
     def __str__(self):
         return f"Comment by: {self.user.email}"
+
+    class Meta:
+        ordering = ["-created_at"]
