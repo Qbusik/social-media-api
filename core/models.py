@@ -6,14 +6,8 @@ from django.db import models
 from django.utils.text import slugify
 
 
-def profile_image_file_path(
-    instance,
-    filename,
-):
-    _, extension = os.path.splitext(filename)
-    filename = f"{slugify(instance.user.email)}-{uuid.uuid4()}{extension}"
-
-    return os.path.join("uploads/profile/", filename)
+def upload_image(instance, filename):
+    return instance.get_image_path(filename)
 
 
 class Profile(models.Model):
@@ -25,9 +19,13 @@ class Profile(models.Model):
     city = models.CharField(max_length=150, blank=True)
     country = models.CharField(max_length=150, blank=True)
     bio = models.TextField(blank=True)
-    picture = models.ImageField(
-        blank=True, null=True, upload_to=profile_image_file_path
-    )
+
+    def get_image_path(self, filename):
+        _, extension = os.path.splitext(filename)
+        filename = f"{slugify(self.user.email)}-{uuid.uuid4()}{extension}"
+        return os.path.join("uploads/profile/", filename)
+
+    picture = models.ImageField(blank=True, null=True, upload_to=upload_image)
     followers = models.ManyToManyField(
         get_user_model(), related_name="following", blank=True
     )
@@ -39,20 +37,16 @@ class Profile(models.Model):
         return self.user.email
 
 
-def post_image_file_path(
-    instance,
-    filename,
-):
-    _, extension = os.path.splitext(filename)
-    filename = f"{slugify(instance.user.email)}-{uuid.uuid4()}{extension}"
-
-    return os.path.join("uploads/posts/", filename)
-
-
 class Post(models.Model):
     user = models.ForeignKey(get_user_model(), on_delete=models.CASCADE)
     content = models.TextField(blank=True)
-    picture = models.ImageField(blank=True, null=True, upload_to=post_image_file_path)
+
+    def get_image_path(self, filename):
+        _, extension = os.path.splitext(filename)
+        filename = f"{slugify(self.user.email)}-{uuid.uuid4()}{extension}"
+        return os.path.join("uploads/posts/", filename)
+
+    picture = models.ImageField(blank=True, null=True, upload_to=upload_image)
     likes = models.ManyToManyField(
         get_user_model(), related_name="liked_posts", blank=True
     )
