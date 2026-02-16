@@ -40,10 +40,20 @@ class TestPost:
         assert res.status_code == status.HTTP_200_OK
         assert post.likes.count() == 1
 
+        res = auth_client.get(reverse("core:liked"))
+
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.data) == 1
+
         res = auth_client.post(reverse("core:toggle-like", kwargs={"pk": post.pk}))
 
         assert res.status_code == status.HTTP_200_OK
         assert post.likes.count() == 0
+
+        res = auth_client.get(reverse("core:liked"))
+
+        assert res.status_code == status.HTTP_200_OK
+        assert len(res.data) == 0
 
     def test_view_only_own_and_followed_users_posts(
         self, auth_client, sample_user, another_user, not_followed_user
