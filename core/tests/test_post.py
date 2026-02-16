@@ -1,8 +1,12 @@
 import os
+import time
+from datetime import timedelta
+from unittest.mock import patch
 
 import pytest
 from django.core.files.uploadedfile import SimpleUploadedFile
 from django.urls import reverse
+from django.utils import timezone
 from rest_framework import status
 
 from core.models import Post, Profile
@@ -72,3 +76,29 @@ class TestPost:
 
         assert res.status_code == status.HTTP_200_OK
         assert res.data["count"] == 2
+
+    def test_scheduled_post_mock(self, auth_client, sample_user):
+        post_data = {
+            "content": "Test",
+            "scheduled_time": (timezone.now() + timedelta(seconds=3)).isoformat(),
+        }
+
+        with patch("core.tasks.publish_post.apply_async") as mock_task:
+            res = auth_client.post(
+                reverse("core:posts-list"), data=post_data, format="json"
+            )
+            assert res.status_code == 201
+
+            post = Post.objects.filter(user=sample_user).latest("created_at")
+            post_id = post.id
+
+            assert post.is_published is False
+
+            mock_task.assert_called_once()
+            call_args, call_kwargs = mock_task.call_args
+
+            assert call_kwargs.get("args") == [post_id]
+
+            eta = call_kwargs.get("eta")
+            assert eta is not None
+            assert abs((eta - post.scheduled_time).total_seconds()) < 1

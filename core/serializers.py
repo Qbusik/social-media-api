@@ -52,7 +52,7 @@ class CommentUpdateSerializer(serializers.ModelSerializer):
 class PostCreateSerializer(serializers.ModelSerializer):
     class Meta:
         model = Post
-        fields = ("content", "picture", "scheduled_time")
+        fields = ("id", "content", "picture", "scheduled_time")
 
     def create(self, validated_data):
         user = self.context["request"].user
