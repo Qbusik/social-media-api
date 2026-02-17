@@ -23,7 +23,7 @@ class Profile(models.Model):
     def get_image_path(self, filename):
         _, extension = os.path.splitext(filename)
         filename = f"{slugify(self.user.email)}-{uuid.uuid4()}{extension}"
-        return os.path.join("uploads/profile/", filename)
+        return os.path.join("profile/", filename)
 
     picture = models.ImageField(blank=True, null=True, upload_to=upload_image)
     followers = models.ManyToManyField(
@@ -47,7 +47,7 @@ class Post(models.Model):
     def get_image_path(self, filename):
         _, extension = os.path.splitext(filename)
         filename = f"{slugify(self.user.email)}-{uuid.uuid4()}{extension}"
-        return os.path.join("uploads/posts/", filename)
+        return os.path.join("posts/", filename)
 
     picture = models.ImageField(blank=True, null=True, upload_to=upload_image)
     likes = models.ManyToManyField(
